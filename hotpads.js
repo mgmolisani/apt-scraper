@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const UserAgent = require('user-agents');
 const fs = require('fs');
 
 const $ = require('cheerio');
@@ -6,9 +7,9 @@ const $$ = (selectors, element) => $(selectors, element).toArray();
 
 const urls = [
   `https://hotpads.com/somerville-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`,
-  // `https://hotpads.com/allston-boston-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`,
-  // `https://hotpads.com/cambridge-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`,
-  // `https://hotpads.com/brookline-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`
+  `https://hotpads.com/allston-boston-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`,
+  `https://hotpads.com/cambridge-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`,
+  `https://hotpads.com/brookline-ma/apartments-for-rent?avail=2019-07-26to2019-08-24&beds=4-8plus`
 ];
 
 const getListingAddress = listing => {
@@ -20,33 +21,46 @@ const getListingAddress = listing => {
 
 module.exports.hotpads = async () => {
   const browser = await puppeteer.launch({
-    headless: false,
-    executablePath: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`,
-    userDataDir: `~/Library/Application Support/Google/Chrome`,
+    headless: true,
     args: [`--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36`]
   });
 
-  for (url of urls) {
+  await Promise.all(urls.map(async url => {
     let max = 1;
 
     for (let i = 1; i <= max; i++) {
       const page = await browser.newPage();
-      await page.goto(`${url}&page=${i}`, {waitUntil: `networkidle0`});
+      await page.setUserAgent(new UserAgent().toString());
+      await page.setRequestInterception(true);
+
+      const handleRequest = (request) => {
+        if (request.resourceType() !== `document`) {
+          request.abort();
+        } else {
+          request.continue();
+        }
+      };
+
+      page.on('request', handleRequest);
+
+      await page.goto(`${url}&page=${i}`, {waitUntil: `domcontentloaded`});
 
       const body = await page.evaluate(() => document.querySelector(`body`).innerHTML);
 
+      page.off('request', handleRequest);
+
+      await page.close();
+
+      console.log(body);
       max = parseInt($(`div.PagerContainer-page-number-area`, body).children().eq(-1).text().trim());
-      console.log(max);
 
       $$(`div.ListingCard-container.ListingCard-stacked`, body)
         .map(getListingAddress)
         .forEach(listing => {
           fs.appendFileSync(`hotpads.csv`, `${listing}\n`);
         });
-
-      await new Promise(done => setTimeout(done, 10000));
     }
-  }
+  }));
 
-  //await browser.close();
+  await browser.close();
 };

@@ -25,7 +25,6 @@ const getListingAddress = listing => {
 module.exports.apartments = async () => {
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome`,
     args: [`--user-agent=custom-user-agent`]
   });
 
@@ -37,6 +36,8 @@ module.exports.apartments = async () => {
       await page.goto(`${url}${i}`, {waitUntil: `networkidle2`});
 
       const body = await page.evaluate(() => document.querySelector(`body`).innerHTML);
+
+      await page.close();
 
       max = parseInt($(`div#paging.paging`, body).children().eq(-2).text().trim());
 
