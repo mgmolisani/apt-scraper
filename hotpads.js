@@ -16,12 +16,12 @@ const getListingAddress = listing => {
   const location = `${$(`h3.ListingCard-name`, listing).text()} ${$(`div.ListingCard-citystate`, listing).text()}`.trim();
   const cost = `${$(`div.Utils-bold.Utils-inline-block`, listing).text()}`;
   const link = `https://hotpads.com/${$(`a`, listing).attr(`href`)}`;
-  return `${location}, ${link}, ${cost}`;
+  return `${location}\t${link}\t${cost}`;
 };
 
 module.exports.hotpads = async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     args: [`--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36`]
   });
 
@@ -47,17 +47,18 @@ module.exports.hotpads = async () => {
 
       const body = await page.evaluate(() => document.querySelector(`body`).innerHTML);
 
+      await new Promise(done => setTimeout(done, 5000));
+
       page.off('request', handleRequest);
 
       await page.close();
 
-      console.log(body);
       max = parseInt($(`div.PagerContainer-page-number-area`, body).children().eq(-1).text().trim());
 
       $$(`div.ListingCard-container.ListingCard-stacked`, body)
         .map(getListingAddress)
         .forEach(listing => {
-          fs.appendFileSync(`hotpads.csv`, `${listing}\n`);
+          fs.appendFileSync(`hotpads.tsv`, `${listing}\n`);
         });
     }
   }));

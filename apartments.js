@@ -19,7 +19,7 @@ const getListingAddress = listing => {
   const location = `${$(`a.placardTitle`, listing).text()} ${$(`div.location`, listing).text()}`.trim();
   const cost = `${$(`span.altRentDisplay`, listing).text()}`;
   const link = `${$(`a.placardTitle`, listing).attr(`href`)}`;
-  return `${location}, ${link}, ${cost}`;
+  return `${location}\t${link}\t${cost}`;
 };
 
 module.exports.apartments = async () => {
@@ -45,7 +45,7 @@ module.exports.apartments = async () => {
         .filter(verifyListingDate)
         .map(getListingAddress)
         .forEach(listing => {
-          fs.appendFileSync(`apartments.csv`, `${listing}\n`);
+          fs.appendFileSync(`apartments.tsv`, `${listing}\n`);
         });
     }
   }));
