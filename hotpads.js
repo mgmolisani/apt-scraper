@@ -47,7 +47,7 @@ module.exports.hotpads = async () => {
 
       const body = await page.evaluate(() => document.querySelector(`body`).innerHTML);
 
-      await new Promise(done => setTimeout(done, 5000));
+      await new Promise(done => setTimeout(done, 20000));
 
       page.off('request', handleRequest);
 
