@@ -26,7 +26,7 @@ module.exports.hotpads = async () => {
     args: [`--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36`]
   });
 
-  const scrapers = urls.map(url => async () => {
+  await urls.map(url => async () => {
     let max = 1;
 
     for (let i = 1; i <= max; i++) {
@@ -48,7 +48,7 @@ module.exports.hotpads = async () => {
 
       const body = await page.evaluate(() => document.querySelector(`body`).innerHTML);
 
-      await new Promise(done => setTimeout(done, 2000));
+      await new Promise(done => setTimeout(done, 5000));
 
       page.off('request', handleRequest);
 
@@ -62,13 +62,7 @@ module.exports.hotpads = async () => {
           fs.appendFileSync(`hotpads.tsv`, `${listing}\n`);
         });
     }
-  });
+  }).reduce((chain, promise) => chain.then(promise), Promise.resolve(null));
 
-  let currentScrapper = 0;
-
-  const runSync = () => {
-    scrapers[currentScrapper]().then(() => ++currentScrapper === urls.length ? browser.close() : runSync());
-  };
-
-  runSync();
+  await browser.close();
 };
