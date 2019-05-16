@@ -15,7 +15,7 @@ const urls = [
 const getListingAddress = listing => {
   const location = `${$(`h3.ListingCard-name`, listing).text()} ${$(`div.ListingCard-citystate`, listing).text()}`.trim();
   const cost = `${$(`div.Utils-bold.Utils-inline-block`, listing).text()}`;
-  const link = `https://hotpads.com/${$(`a`, listing).attr(`href`)}`;
+  const link = `https://hotpads.com${$(`a`, listing).attr(`href`)}`;
   return `${location}\t${link}\t${cost}`;
 };
 
