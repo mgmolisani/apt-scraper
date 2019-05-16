@@ -9,6 +9,7 @@ const urls = [
   `https://www.apartments.com/allston-ma/4-bedrooms/`,
   `https://www.apartments.com/cambridge-ma/4-bedrooms/`,
   `https://www.apartments.com/brookline-ma/4-bedrooms/`,
+  `https://www.apartments.com/brighton-ma/4-bedrooms/`,
 ];
 
 const verifyListingDate = listing => {
